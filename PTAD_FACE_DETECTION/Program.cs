@@ -14,7 +14,7 @@ namespace FaceDetection
         private const string SubscriptionKey = "a33340fd28644f3aa66c5b934abc094a";
         private const string Endpoint = "https://ptad.cognitiveservices.azure.com/";
 
-        static async void Main(string[] args)
+        static void Main(string[] args)
         {
             // Replace with the path to your folder of headshot images
             string folderPath = @"C:\BESPhotos\TEST\";
@@ -27,8 +27,8 @@ namespace FaceDetection
             // Set up the Face API client
             IFaceClient faceClient = new FaceClient(new ApiKeyServiceClientCredentials(SubscriptionKey)) { Endpoint = Endpoint };
             List<Tuple<string,string>> facesDetected = new List<Tuple<string, string>>();
-           
-            List<string> facesNotDetected = new List<string>();
+
+            List<Tuple<string, string>> facesNotDetected = new List<Tuple<string, string>>();
             // Loop through each image file in the folder
             DirectoryInfo directory = new DirectoryInfo(folderPath);
             foreach (FileInfo file in directory.GetFiles("*.jpg"))
@@ -36,27 +36,36 @@ namespace FaceDetection
                 // Load the image file
                 using (Stream imageStream = File.OpenRead(file.FullName))
                 {
-                    // Detect faces in the image
-                    IList<DetectedFace> faces =  faceClient.Face.DetectWithStreamAsync(
-                        imageStream,
-                        detectionModel: DetectionModel.Detection03,
-                        recognitionModel: RecognitionModel.Recognition03,
-                        returnFaceAttributes: new List<FaceAttributeType>
+                    try
+                    {
+                        // Detect faces in the image
+                        IList<DetectedFace> faces = faceClient.Face.DetectWithStreamAsync(
+                            imageStream,
+                            detectionModel: DetectionModel.Detection01,
+                            recognitionModel: RecognitionModel.Recognition04,
+                            returnFaceAttributes: new List<FaceAttributeType> { FaceAttributeType.QualityForRecognition, FaceAttributeType.Blur,FaceAttributeType.Exposure
+                            }).Result;
+
+                        // Add the file name and face detection result to the Excel sheet
+                        string fileName = Path.GetFileNameWithoutExtension(file.Name);
+                        if (faces.Count > 0)
                         {
-        FaceAttributeType.Blur,
-        FaceAttributeType.Exposure,
-                        }).Result;
-                    // Add the file name and face detection result to the Excel sheet
-                    string fileName = Path.GetFileNameWithoutExtension(file.Name);
-                    if (faces.Count > 0)
-                    {
-                        facesDetected.Add(Tuple.Create (fileName,faces[0].FaceAttributes.QualityForRecognition.ToString()));
-                        
+                            double qualityScore = (1 - faces[0].FaceAttributes.Blur.Value) * (1 - faces[0].FaceAttributes.Exposure.Value);
+                            facesDetected.Add(Tuple.Create(fileName, qualityScore.ToString()));
+
+                        }
+                        else
+                        {
+                           
+                            facesNotDetected.Add(Tuple.Create(fileName, "0"));
+
+                        }
                     }
-                    else
+                    catch(System.AggregateException e)
                     {
-                        facesNotDetected.Add(fileName);
-                       
+                        Console.WriteLine(e.InnerException);
+                        Console.WriteLine(e.InnerExceptions);
+                        Console.WriteLine(e.Data);
                     }
                 }
             }
@@ -78,7 +87,7 @@ namespace FaceDetection
                     worksheet.Cells[row, 3].Value = filename.Item2;
                     row++;
                 }
-                foreach (string filename in facesNotDetected)
+                foreach (var filename in facesNotDetected)
                 {
                     worksheet.Cells[row, 1].Value = filename;
                     worksheet.Cells[row, 2].Value = "No";
