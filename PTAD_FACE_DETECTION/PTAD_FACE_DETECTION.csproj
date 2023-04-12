@@ -8,10 +8,13 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="AForge.Core" Version="1.0.0" />
+    <PackageReference Include="AForge.Imaging.Core" Version="1.0.0" />
     <PackageReference Include="EPPlus" Version="6.2.1" />
     <PackageReference Include="Microsoft.Azure.CognitiveServices.Vision.ComputerVision" Version="7.0.1" />
     <PackageReference Include="Microsoft.Azure.CognitiveServices.Vision.Face" Version="2.8.0-preview.3" />
     <PackageReference Include="OfficeOpenXml.Core.ExcelPackage" Version="1.0.0" />
+    <PackageReference Include="SixLabors.ImageSharp" Version="3.0.1" />
   </ItemGroup>
 
 </Project>
