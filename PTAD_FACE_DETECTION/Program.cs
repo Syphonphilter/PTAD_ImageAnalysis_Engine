@@ -31,7 +31,7 @@ namespace FaceDetection
 
             // Set up the Face API client
             IFaceClient faceClient = new FaceClient(new ApiKeyServiceClientCredentials(SubscriptionKey)) { Endpoint = Endpoint };
-            List<Tuple<string,string>> facesDetected = new List<Tuple<string, string>>();
+            List<Tuple<string,string,string,string,string,string>> facesDetected = new List<Tuple<string, string, string, string, string,string>>();
 
             List<Tuple<string, string>> facesNotDetected = new List<Tuple<string, string>>();
             // Loop through each image file in the folder
@@ -52,9 +52,9 @@ namespace FaceDetection
                         // Detect faces in the image
                         IList<DetectedFace> faces = faceClient.Face.DetectWithStreamAsync(
                             imageStream,
-                            detectionModel: DetectionModel.Detection01,
+                            detectionModel: DetectionModel.Detection03,
                             recognitionModel: RecognitionModel.Recognition04,
-                            returnFaceAttributes: new List<FaceAttributeType> { FaceAttributeType.QualityForRecognition, FaceAttributeType.Blur,FaceAttributeType.Exposure
+                            returnFaceAttributes: new List<FaceAttributeType> { FaceAttributeType.QualityForRecognition, FaceAttributeType.Blur,FaceAttributeType.Exposure, FaceAttributeType.Noise,FaceAttributeType.Occlusion,FaceAttributeType.QualityForRecognition, FaceAttributeType.Accessories
                             }).Result;
 
                         // Add the file name and face detection result to the Excel sheet
@@ -63,8 +63,13 @@ namespace FaceDetection
                         if (faces.Count > 0)
                         {
                             double qualityScore = (1 - faces[0].FaceAttributes.Blur.Value) * (1 - faces[0].FaceAttributes.Exposure.Value);
+                            string noise = faces[0].FaceAttributes.Noise.ToString();
+                            string occulsion = faces[0].FaceAttributes.Occlusion.ToString();
+                            string Quality = faces[0].FaceAttributes.QualityForRecognition.ToString();
+                            string accessories = faces[0].FaceAttributes.Accessories.ToString();
+                            
                        
-                            facesDetected.Add(Tuple.Create(fileName, qualityScore.ToString()));
+                            facesDetected.Add(Tuple.Create(fileName, qualityScore.ToString(),noise,occulsion,Quality,accessories));
                             if (qualityScore < 0.6)
                             {
                                 EnchanceImage(fileName,true);
